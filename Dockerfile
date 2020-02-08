@@ -1,8 +1,8 @@
 FROM scratch
 
-ADD ciGatingServer /
+ADD petServer /
 
 EXPOSE 8080
 
-CMD ["/webServer"]
+CMD ["/petServer"]
 
