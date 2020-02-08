@@ -1,28 +1,29 @@
 package main
 
 import (
-	"ciGatingServer/webServer"
 	"log"
 	"net/http"
 	"os"
+	"petServer/dataStore"
+	"petServer/webServer"
 )
 
 func main() {
-	dataStore, err := ciGatingServer.NewCiDataStore("/dataStore/ciGatingServerSettings.json")
+	store, err := dataStore.NewDataStore("/Users/doomer/tmp/pets.json")
 
 	if err != nil {
 		log.Printf("error : %+v", err)
 		os.Exit(-1)
 	}
 
-	webServer, err := ciGatingServer.NewCiWebServer(":8080", dataStore)
+	server, err := webServer.NewPetServer(":8080", store)
 
 	if err != nil {
 		log.Printf("Error: %+v", err)
 		os.Exit(-1)
 	}
 
-	if err := webServer.Start(); err != http.ErrServerClosed {
+	if err := server.Start(); err != http.ErrServerClosed {
 		log.Printf("Error: %+v\n", err)
 		os.Exit(-1)
 	}

@@ -39,9 +39,9 @@ func TestGettingNonExistentPet(t *testing.T) {
 		t.Error(err)
 	}
 
-	pet := store.OnePet("noName")
+	petCollection := store.OnePet("noName")
 
-	if pet.Age != 0 || len(pet.Breed) != 0 {
+	if len(petCollection.Collection) > 0 {
 		t.Error("got pet where none was expected")
 	}
 }
@@ -63,9 +63,15 @@ func TestGetting1Pet(t *testing.T) {
 		t.Error(err)
 	}
 
-	pet := store.OnePet(buttons)
+	petCollection := store.OnePet(buttons)
 
-	if pet.Age != buttonsAge || pet.Breed != buttonsBreed {
+	if len(petCollection.Collection) != 1 {
+		t.Errorf("expected to get 1 pet, but got %d", len(petCollection.Collection))
+	}
+
+	pet := petCollection.Collection[buttons]
+
+	if pet.Breed != buttonsBreed || pet.Age != buttonsAge {
 		t.Error("got the wrong pet")
 	}
 }

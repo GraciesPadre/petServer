@@ -3,15 +3,16 @@ package webServer
 import (
 	"fmt"
 	"net/http"
+	"petServer/dataStore"
 )
 
-func NewDispatcher(ciDataStore CiDataStore) (Dispatcher, error) {
-	if ciDataStore == nil {
+func NewDispatcher(dataStore dataStore.DataStore) (Dispatcher, error) {
+	if dataStore == nil {
 		return nil, fmt.Errorf("ciDataStore may not be nil")
 	}
-	putHandlers := []HttpRequestHandler{&putHandler{ciDataStore: ciDataStore}}
-	getHandlers := []HttpRequestHandler{&getHandler{ciDataStore: ciDataStore}}
-	deleteHandlers := []HttpRequestHandler{&deleteHandler{ciDataStore: ciDataStore}}
+	putHandlers := []HttpRequestHandler{&putHandler{dataStore: dataStore}}
+	getHandlers := []HttpRequestHandler{&getHandler{dataStore: dataStore}}
+	deleteHandlers := []HttpRequestHandler{&deleteHandler{dataStore: dataStore}}
 
 	return &dispatcher{putHandlers: putHandlers, getHandlers: getHandlers, deleteHandlers: deleteHandlers}, nil
 }

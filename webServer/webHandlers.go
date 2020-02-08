@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"petServer/dataStore"
 )
 
 type HttpRequestHandler interface {
@@ -17,7 +18,7 @@ type PutHandler interface {
 }
 
 type putHandler struct {
-	ciDataStore CiDataStore
+	dataStore dataStore.DataStore
 }
 
 func (handler *putHandler) HandleRequest(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
@@ -34,7 +35,7 @@ func (handler *putHandler) HandlePut(responseWriter http.ResponseWriter, httpReq
 		return err
 	}
 
-	var settingsCollection IntegrationTestSettingsCollection
+	var settingsCollection dataStore.PetsCollection
 	err = json.Unmarshal(body, &settingsCollection)
 
 	if err != nil {
@@ -42,25 +43,15 @@ func (handler *putHandler) HandlePut(responseWriter http.ResponseWriter, httpReq
 		return err
 	}
 
-	for testPath, settings := range settingsCollection.SettingsCollection {
-		if settings.GatesCIBuild {
-			handler.ciDataStore.EnableGating(testPath)
-		} else {
-			handler.ciDataStore.DisableGating(testPath)
-		}
-
-		if settings.Enabled {
-			handler.ciDataStore.EnableIntegrationTest(testPath)
-		} else {
-			handler.ciDataStore.DisableIntegrationTest(testPath)
-		}
+	for name, settings := range settingsCollection.Collection {
+		handler.dataStore.AddPet(name, settings.Breed, settings.Age)
 	}
 
-	return getAllSettings(handler.ciDataStore, responseWriter)
+	return getAllSettings(handler.dataStore, responseWriter)
 }
 
-func getAllSettings(dataStore CiDataStore, responseWriter http.ResponseWriter) error {
-	settings := dataStore.ReportAllTests()
+func getAllSettings(dataStore dataStore.DataStore, responseWriter http.ResponseWriter) error {
+	settings := dataStore.AllPets()
 
 	result, err := json.Marshal(settings)
 
@@ -81,7 +72,7 @@ type GetHandler interface {
 }
 
 type getHandler struct {
-	ciDataStore CiDataStore
+	dataStore dataStore.DataStore
 }
 
 func (handler *getHandler) HandleRequest(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
@@ -89,33 +80,23 @@ func (handler *getHandler) HandleRequest(responseWriter http.ResponseWriter, htt
 }
 
 func (handler *getHandler) HandleGet(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
-	testPath := httpRequest.URL.Query().Get("testPath")
+	name := httpRequest.URL.Query().Get("name")
 
-	if len(testPath) == 0 {
+	if len(name) == 0 {
 		return handler.handleGetAllSettings(responseWriter)
 	}
 
-	return handler.handleGetOneSetting(responseWriter, testPath)
+	return handler.handleGetOneSetting(responseWriter, name)
 }
 
 func (handler *getHandler) handleGetAllSettings(responseWriter http.ResponseWriter) error {
-	return getAllSettings(handler.ciDataStore, responseWriter)
+	return getAllSettings(handler.dataStore, responseWriter)
 }
 
-func (handler *getHandler) handleGetOneSetting(responseWriter http.ResponseWriter, testPath string) error {
-	isEnabled := handler.ciDataStore.IsEnabled(testPath)
-	isGating := handler.ciDataStore.IsGating(testPath)
+func (handler *getHandler) handleGetOneSetting(responseWriter http.ResponseWriter, name string) error {
+	pet := handler.dataStore.OnePet(name)
 
-	settingsMap := map[string]IntegrationTestSettings{
-		testPath: {
-			Enabled:      isEnabled,
-			GatesCIBuild: isGating,
-		},
-	}
-
-	settingsCollection := IntegrationTestSettingsCollection{SettingsCollection: settingsMap}
-
-	result, err := json.Marshal(settingsCollection)
+	result, err := json.Marshal(pet)
 
 	if err != nil {
 		responseWriter.WriteHeader(500)
@@ -134,7 +115,7 @@ type DeleteHandler interface {
 }
 
 type deleteHandler struct {
-	ciDataStore CiDataStore
+	dataStore dataStore.DataStore
 }
 
 func (handler *deleteHandler) HandleRequest(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
@@ -142,14 +123,14 @@ func (handler *deleteHandler) HandleRequest(responseWriter http.ResponseWriter, 
 }
 
 func (handler *deleteHandler) HandleDelete(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
-	testPath := httpRequest.URL.Query().Get("testPath")
+	name := httpRequest.URL.Query().Get("name")
 
-	if len(testPath) == 0 {
+	if len(name) == 0 {
 		responseWriter.WriteHeader(400)
 		return fmt.Errorf("testPath not found in parameters")
 	}
 
-	settingsCollection := handler.ciDataStore.RemoveTestSetting(testPath)
+	settingsCollection := handler.dataStore.RemovePet(name)
 
 	result, err := json.Marshal(settingsCollection)
 

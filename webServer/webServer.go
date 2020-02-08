@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"petServer/dataStore"
 	"sync"
 )
 
-func NewCiWebServer(port string, dataStore CiDataStore) (CiWebServer, error) {
+func NewPetServer(port string, dataStore dataStore.DataStore) (PetServer, error) {
 	if len(port) == 0 {
 		return nil, fmt.Errorf("port may not be empty")
 	}
@@ -23,7 +24,7 @@ func NewCiWebServer(port string, dataStore CiDataStore) (CiWebServer, error) {
 		return nil, err
 	}
 
-	return &ciWebServer{
+	return &petServer{
 		port:       port,
 		httpServer: nil,
 		dispatcher: dispatcher,
@@ -31,21 +32,21 @@ func NewCiWebServer(port string, dataStore CiDataStore) (CiWebServer, error) {
 	}, nil
 }
 
-type CiWebServer interface {
+type PetServer interface {
 	Start() error
 	Stop(responseWriter http.ResponseWriter, httpRequest *http.Request)
-	HandleTestInfo(responseWriter http.ResponseWriter, httpRequest *http.Request)
+	HandlePetInfo(responseWriter http.ResponseWriter, httpRequest *http.Request)
 }
 
-type ciWebServer struct {
+type petServer struct {
 	port       string
 	httpServer *http.Server
 	dispatcher Dispatcher
-	dataStore  CiDataStore
+	dataStore  dataStore.DataStore
 	lock       sync.Mutex
 }
 
-func (server *ciWebServer) Start() error {
+func (server *petServer) Start() error {
 	_ = server.dataStore.Load()
 
 	server.newServer()
@@ -53,31 +54,31 @@ func (server *ciWebServer) Start() error {
 	return server.httpServer.ListenAndServe()
 }
 
-func (server *ciWebServer) newServer() {
+func (server *petServer) newServer() {
 	server.lock.Lock()
 	defer server.lock.Unlock()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/close", server.Stop)
-	mux.HandleFunc("/integrationTest", server.HandleTestInfo)
+	mux.HandleFunc("/pet", server.HandlePetInfo)
 
 	server.httpServer = &http.Server{Addr: server.port, Handler: mux}
 }
 
 /*
-curl --header "Content-Type: application/json" --request PUT --data '{"settings_collection":{"ick":{"enabled":false,"gates_ci_build":false}}}' http://localhost:8080/integrationTest
-curl http://localhost:8080/integrationTest?testPath=Gracie
-curl http://localhost:8080/integrationTest
-curl -X DELETE http://localhost:8080/integrationTest?testPath=Shasta
+curl --header "Content-Type: application/json" -X PUT --data '{"pets_collection":{"Buttons":{"age":2,"breed":"Terrier"},"Gracie":{"age":9,"breed":"Spitz"},"Shasta":{"age":9,"breed":"Spitz"}}}' http://localhost:8080/pet
+curl http://localhost:8080/pet
+curl http://localhost:8080/pet?name=Buttons
+curl -X DELETE http://localhost:8080/pet?name=Shastas
 curl -X PUT http://localhost:8080/close
 */
-func (server *ciWebServer) HandleTestInfo(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+func (server *petServer) HandlePetInfo(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 	if err := server.dispatcher.HandleRequest(responseWriter, httpRequest); err != nil {
 		responseWriter.WriteHeader(500)
 	}
 }
 
-func (server *ciWebServer) Stop(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+func (server *petServer) Stop(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 	if httpRequest.Method == "PUT" {
 		server.lock.Lock()
 		defer server.lock.Unlock()

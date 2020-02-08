@@ -19,7 +19,7 @@ type DataStore interface {
 	AddPet(name string, breed string, age int) PetsCollection
 	RemovePet(name string) PetsCollection
 	AllPets() PetsCollection
-	OnePet(name string) Pet
+	OnePet(name string) PetsCollection
 }
 
 type dataStore struct {
@@ -79,9 +79,17 @@ func (store *dataStore) AllPets() PetsCollection {
 	return store.petsCollection
 }
 
-func (store *dataStore) OnePet(name string) Pet {
+func (store *dataStore) OnePet(name string) PetsCollection {
 	store.lock.RLock()
 	defer store.lock.RUnlock()
 
-	return store.petsCollection.Collection[name]
+	result := NewPetsCollection()
+
+	pet := store.petsCollection.Collection[name]
+
+	if pet.Age != 0 || len(pet.Breed) > 0 {
+		result.Collection[name] = pet
+	}
+
+	return result
 }
