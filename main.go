@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	// TODO: Change filePath to something more appropriate.
 	store, err := dataStore.NewDataStore("/Users/doomer/tmp/pets.json")
 
 	if err != nil {
