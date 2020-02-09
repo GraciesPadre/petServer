@@ -8,7 +8,7 @@ import (
 
 func NewDispatcher(dataStore dataStore.DataStore) (Dispatcher, error) {
 	if dataStore == nil {
-		return nil, fmt.Errorf("ciDataStore may not be nil")
+		return nil, fmt.Errorf("dataStore may not be nil")
 	}
 	putHandlers := []HttpRequestHandler{&putHandler{dataStore: dataStore}}
 	getHandlers := []HttpRequestHandler{&getHandler{dataStore: dataStore}}
