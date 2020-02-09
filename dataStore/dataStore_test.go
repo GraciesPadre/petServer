@@ -164,3 +164,31 @@ func TestStoringPets(t *testing.T) {
 		t.Error("got incorrect pet info")
 	}
 }
+
+func TestLoadingFromNonExistentFile(t *testing.T) {
+	const fileName = "TestLoadingFromNonExistentFile.json"
+
+	_, err := NewDataStore(fileName)
+
+	if err != nil {
+		t.Fatal("trying to read non-existent file should not error")
+	}
+}
+
+func TestSavingEmptyCollection(t *testing.T) {
+	const fileName = "TestSavingEmptyCollection.json"
+
+	defer nukeFile(fileName)
+
+	newStore, err := NewDataStore(fileName)
+
+	if err != nil {
+		t.Fatal("trying to read non-existent file should not error")
+	}
+
+	err = newStore.Store()
+
+	if err != nil {
+		t.Fatal("storing empty collection should not error")
+	}
+}
