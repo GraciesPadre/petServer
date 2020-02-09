@@ -1,4 +1,4 @@
-cd /home/jdumais/Projects/go/src/petServer
+cd /Users/doomer/go/src/petServer
 CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo
 docker build -t pet_server:latest .
 docker run --mount type=bind,src=/Users/doomer/tmp/pets.json,dst=/Users/doomer/tmp/pets.json -p 8080:8080 pet_server
