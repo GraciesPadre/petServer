@@ -3,7 +3,7 @@ CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo
 docker build -t pet_server:latest .
 docker run --mount type=bind,src=/Users/doomer/tmp/pets.json,dst=/Users/doomer/tmp/pets.json -p 8080:8080 pet_server
 
-curl --header "Content-Type: application/json" -X PUT --data '{"pets_collection":{"Buttons":{"age":2,"breed":"Terrier"},"Gracie":{"age":9,"breed":"Spitz"},"Shasta":{"age":9,"breed":"Spitz"}}}' http://localhost:8080/pet
+curl --header "Content-Type: application/json" -X PUT --data '{"pets_collection":{"Buttons":{"age":2,"breed":"Terrier"},"Gracie":{"age":9,"breed":"Spitz"},"Shasta":{"age":9,"breed":"Eskie"}}}' http://localhost:8080/pet
 curl http://localhost:8080/pet
 curl http://localhost:8080/pet?name=Buttons
 curl -X DELETE http://localhost:8080/pet?name=Shasta
