@@ -13,9 +13,17 @@ func NewDataStore(filePath string) (DataStore, error) {
 	return &dataStore{serverSettings: serverSettings, petsCollection: NewPetsCollection()}, nil
 }
 
-type DataStore interface {
+type Loader interface {
 	Load() error
+}
+
+type Storeer interface {
 	Store() error
+}
+
+type DataStore interface {
+	Loader
+	Storeer
 	AddPet(name string, breed string, age int) PetsCollection
 	RemovePet(name string) PetsCollection
 	AllPets() PetsCollection

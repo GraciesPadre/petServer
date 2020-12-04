@@ -51,9 +51,9 @@ func (handler *putHandler) HandlePut(responseWriter http.ResponseWriter, httpReq
 }
 
 func getAllSettings(dataStore dataStore.DataStore, responseWriter http.ResponseWriter) error {
-	settings := dataStore.AllPets()
+	pets := dataStore.AllPets()
 
-	result, err := json.Marshal(settings)
+	result, err := json.Marshal(pets)
 
 	if err != nil {
 		responseWriter.WriteHeader(500)
